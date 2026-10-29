@@ -70,3 +70,21 @@ run "email_invalido_e_rejeitado" {
 
   expect_failures = [var.budget_email]
 }
+
+run "role_de_drift_so_aceita_a_main" {
+  command = plan
+
+  assert {
+    condition     = output.github_subs["drift"] == "repo:heldemfilipe/terraform-aws-foundation:ref:refs/heads/main"
+    error_message = "A role de drift precisa aceitar só tokens da branch main deste repositório."
+  }
+}
+
+run "cada_role_tem_um_sub_diferente" {
+  command = plan
+
+  assert {
+    condition     = length(distinct(values(output.github_subs))) == length(output.github_subs)
+    error_message = "Duas roles não podem aceitar o mesmo sub."
+  }
+}

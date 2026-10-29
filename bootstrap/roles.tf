@@ -5,7 +5,12 @@ locals {
   github_subs = {
     plan  = "repo:${var.github_repo}:pull_request"
     apply = "repo:${var.github_repo}:environment:${var.github_environment}"
+    # Job agendado (drift.yml): não é PR nem usa environment.
+    drift = "repo:${var.github_repo}:ref:refs/heads/main"
   }
+
+  # Papéis que só leem: o drift usa as mesmas permissões do plan.
+  somente_leitura = toset(["plan", "drift"])
 }
 
 # --- Trust policy: quem pode assumir cada role ---
@@ -45,8 +50,10 @@ resource "aws_iam_role" "foundation" {
 
 # --- Role de plan: lê tudo, usa o state e só escreve o arquivo de lock ---
 
-resource "aws_iam_role_policy_attachment" "plan_readonly" {
-  role       = aws_iam_role.foundation["plan"].name
+resource "aws_iam_role_policy_attachment" "leitura" {
+  for_each = local.somente_leitura
+
+  role       = aws_iam_role.foundation[each.key].name
   policy_arn = "arn:aws:iam::aws:policy/ReadOnlyAccess"
 }
 
@@ -70,9 +77,11 @@ data "aws_iam_policy_document" "plan_state" {
   }
 }
 
-resource "aws_iam_role_policy" "plan_state" {
+resource "aws_iam_role_policy" "state_leitura" {
+  for_each = local.somente_leitura
+
   name   = "state-e-lock"
-  role   = aws_iam_role.foundation["plan"].id
+  role   = aws_iam_role.foundation[each.key].id
   policy = data.aws_iam_policy_document.plan_state.json
 }
 
