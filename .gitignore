@@ -30,3 +30,6 @@ plan.txt
 terraform.rc
 
 # O .terraform.lock.hcl PRECISA ser versionado: não ignore.
+
+# Módulos não têm lock próprio; o lock fica em quem os usa.
+modules/**/.terraform.lock.hcl

@@ -25,7 +25,23 @@ docs/         guias e runbook
 
 ## Como usar cada módulo
 
-_A preencher a cada módulo (Etapa 2), com o trecho gerado pelo terraform-docs._
+Cada módulo tem README próprio, com tabelas geradas pelo terraform-docs, e um exemplo em `examples/`.
+
+| Módulo | Para que serve | Documentação | Exemplo |
+|---|---|---|---|
+| `secure-s3` | Bucket com criptografia, versionamento, bloqueio de acesso público e TLS obrigatório | [README](modules/secure-s3/README.md) | [examples/secure-s3](examples/secure-s3) |
+| `network` | _A escrever (Etapa 2)_ | | |
+| `ecs-service` | _A escrever (Etapa 2)_ | | |
+
+```hcl
+module "bucket" {
+  source = "git::https://github.com/heldemfilipe/terraform-aws-foundation.git//modules/secure-s3?ref=v1.0.0"
+
+  nome = "meu-bucket-unico"
+}
+```
+
+A tag `v1.0.0` é criada no fim da Etapa 2.
 
 ## Decisões
 
