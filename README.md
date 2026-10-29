@@ -128,7 +128,8 @@ bootstrap/    bucket de state, provedor OIDC e roles (state local, uma única ve
 modules/      network, secure-s3 e ecs-service
 envs/dev/     raiz que o pipeline executa (usa os módulos, state remoto)
 examples/     um exemplo de uso por módulo
-policy/       políticas em Rego (OPA/conftest)
+policy/       políticas em Rego (OPA/conftest) e os testes delas
+testdata/     planos de exemplo (um bom, um ruim) para as políticas
 .github/      workflows de plan, apply e drift
 docs/         guias e runbook
 ```
@@ -162,6 +163,7 @@ A tag `v1.0.0` é criada no fim da Etapa 2.
 | Identidade do pipeline | GitHub Actions com OIDC | Sem chave de acesso de longa duração |
 | Segurança | Trivy | Um binário só; lê o Terraform sem `init` nem `plan`; as exceções ficam no código com `#trivy:ignore` e justificativa |
 | Policy as code | OPA com conftest | Bloqueia o PR com mensagem legível |
+| Testes das políticas | `opa test` com planos mínimos, mais `conftest` sobre planos reais gerados pelo Terraform | O teste unitário trava o comportamento de cada regra; o plano real prova que o formato do `terraform show -json` é o esperado |
 | Role de plan | `ReadOnlyAccess` mais acesso ao state e só escrita do `.tflock` | Simplificação de estudo: lê mais do que precisa; um projeto real restringiria |
 | Role de apply | Permissões estreitas, só buckets `foundation-lab-*` e o state; nunca `AdministratorAccess` | Limita o dano se o pipeline for comprometido |
 | Raiz do pipeline | `envs/dev`, só com `secure-s3` | A role de apply só tem permissão de S3 em `foundation-lab-*`; incluir `network` exigiria ampliá-la |
@@ -170,8 +172,9 @@ A tag `v1.0.0` é criada no fim da Etapa 2.
 
 ## Custo
 
-Custo real: zero, porque nada é aplicado. _A preencher: estimativa de custo dos módulos com
-Infracost (Etapa 5, opcional)._ Como rodar sem AWS em [docs/00-instalacao.md](docs/00-instalacao.md).
+Custo real: zero, porque nada é aplicado. A estimativa dos módulos que cobram (NAT e ALB) fica a cargo
+do workflow [cost.yml](.github/workflows/cost.yml) com Infracost, **não executado** por exigir uma chave de
+API própria. Como rodar sem AWS em [docs/00-instalacao.md](docs/00-instalacao.md).
 
 ## Experimentos
 
@@ -190,7 +193,7 @@ Infracost (Etapa 5, opcional)._ Como rodar sem AWS em [docs/00-instalacao.md](do
 - [x] Etapa 2: módulos reutilizáveis (tag `v1.0.0`, testados com `mock_provider`)
 - [x] Etapa 3: qualidade local (pre-commit, tflint, gitleaks e Trivy, em [docs/02-qualidade-local.md](docs/02-qualidade-local.md))
 - [x] Etapa 4: pipeline de plan e apply (só código: validado com `actionlint`, não executado; veja [docs/03-pipeline.md](docs/03-pipeline.md))
-- [ ] Etapa 5: policy as code e custo
+- [x] Etapa 5: policy as code e custo (políticas testadas localmente com `opa` e `conftest`; workflows não executados; veja [docs/04-policy-as-code.md](docs/04-policy-as-code.md))
 - [ ] Etapa 6: drift e recuperação
 
 ## Licença

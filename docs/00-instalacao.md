@@ -59,15 +59,16 @@ winget install GitHub.cli
 pip install pre-commit
 ```
 
-`conftest` e `opa`: veja se o choco tem.
+`opa` (Etapa 5) vem do winget:
 
 ```powershell
-choco search conftest
+winget install open-policy-agent.opa
 ```
 
-Se não tiver, baixe o `.exe` Windows da página de releases do projeto no GitHub
-(open-policy-agent/conftest e open-policy-agent/opa), coloque numa pasta que esteja no PATH
-e renomeie para `conftest.exe` e `opa.exe`. Isso só é necessário na Etapa 5.
+O `conftest` não está no choco nem no winget. Baixe o `.zip` Windows da página de releases
+(open-policy-agent/conftest), **confira o checksum** contra o `checksums.txt` da mesma página e copie o
+`conftest.exe` para uma pasta do PATH. O passo a passo com os comandos está em
+[docs/04-policy-as-code.md](04-policy-as-code.md).
 
 Login no GitHub (escolha HTTPS e siga o navegador):
 
