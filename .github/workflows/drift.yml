@@ -1,0 +1,86 @@
+name: drift
+
+# Todo dia compara a AWS com o state e o código. Mudança feita por fora (console, CLI)
+# aparece como "plan não vazio" e vira uma issue.
+on:
+  schedule:
+    - cron: "0 9 * * *" # 06:00 em Brasília
+  workflow_dispatch:
+
+# Não roda junto com um apply: o lock do state já protege, e isto evita fila à toa.
+concurrency:
+  group: terraform-apply-dev
+  cancel-in-progress: false
+
+permissions:
+  id-token: write
+  contents: read
+  issues: write
+
+env:
+  AWS_REGION: us-east-1
+  TF_IN_AUTOMATION: "true"
+  TF_VAR_account_id: ${{ vars.AWS_ACCOUNT_ID }}
+
+jobs:
+  drift:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: envs/dev
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      # Role própria, só de leitura: o sub de um job agendado é ref:refs/heads/main,
+      # que as roles de plan (pull_request) e de apply (environment) não aceitam.
+      - uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+        with:
+          role-to-assume: ${{ vars.DRIFT_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
+        with:
+          terraform_version: 1.17.1
+          terraform_wrapper: false
+
+      - name: init
+        run: |
+          terraform init -lockfile=readonly \
+            -backend-config="bucket=${{ vars.STATE_BUCKET }}" \
+            -backend-config="region=${AWS_REGION}"
+
+      # Código de saída do plan: 0 = sem mudança, 1 = erro, 2 = mudança pendente (drift).
+      # O shell do Actions para no primeiro erro, então ele é desligado só neste passo.
+      - name: detecta drift
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set +e
+          terraform plan -detailed-exitcode -no-color > plan.txt
+          code=$?
+          set -e
+
+          titulo="Drift detectado"
+          aberta=$(gh issue list --state open --search "\"${titulo}\" in:title" --json number --jq '.[0].number // empty')
+
+          if [ "$code" -eq 2 ]; then
+            {
+              echo "O plan de \`envs/dev\` não está vazio: a infraestrutura difere do código ou do state."
+              echo "Execução: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+              echo
+              echo '```'
+              head -c 60000 plan.txt
+              echo
+              echo '```'
+            } > issue.md
+            if [ -n "$aberta" ]; then
+              gh issue comment "$aberta" --body-file issue.md
+            else
+              gh label create drift --color B60205 --description "Infraestrutura diferente do código" 2>/dev/null || true
+              gh issue create --title "$titulo" --label drift --body-file issue.md
+            fi
+          elif [ "$code" -ne 0 ]; then
+            exit "$code"
+          elif [ -n "$aberta" ]; then
+            gh issue close "$aberta" --comment "O plan voltou a ficar vazio."
+          fi
