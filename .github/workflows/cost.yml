@@ -1,0 +1,50 @@
+name: cost
+
+# Estimativa de custo dos módulos que custam dinheiro de verdade (VPC com NAT e Fargate com ALB).
+# Opcional: precisa do secret INFRACOST_API_KEY (chave gratuita, veja docs/04-policy-as-code.md).
+on:
+  pull_request:
+    paths:
+      - "modules/**"
+      - "examples/**"
+
+concurrency:
+  group: cost-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  cost:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: infracost/actions/setup@a5783eb98adc93aa7a0049fce0abb06fdd30770a # v5.0.1
+        with:
+          api-key: ${{ secrets.INFRACOST_API_KEY }}
+
+      # Os exemplos usam credenciais falsas, então a estimativa não precisa de acesso à AWS.
+      # NAT e ALB ligados: é o cenário que realmente cobra.
+      - name: estimativa da rede (com NAT)
+        run: |
+          infracost breakdown --path examples/network \
+            --terraform-var enable_nat=true \
+            --format json --out-file /tmp/network.json
+
+      - name: estimativa do serviço (com ALB)
+        run: |
+          infracost breakdown --path examples/ecs-service \
+            --terraform-var enable_alb=true \
+            --format json --out-file /tmp/ecs-service.json
+
+      - name: comenta no PR
+        run: |
+          infracost comment github \
+            --path "/tmp/*.json" \
+            --repo "$GITHUB_REPOSITORY" \
+            --github-token "${{ github.token }}" \
+            --pull-request "${{ github.event.pull_request.number }}" \
+            --behavior update
