@@ -33,6 +33,10 @@ module "network" {
   azs                = ["us-east-1a", "us-east-1b"]
   enable_nat_gateway = var.enable_nat
 
+  # Tags que o AWS Load Balancer Controller usa para achar as sub-redes (EKS).
+  public_subnet_tags  = { "kubernetes.io/role/elb" = "1" }
+  private_subnet_tags = { "kubernetes.io/role/internal-elb" = "1" }
+
   tags = {
     Project = "terraform-aws-foundation"
   }

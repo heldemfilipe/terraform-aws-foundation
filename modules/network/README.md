@@ -16,6 +16,25 @@ module "network" {
 
 Um exemplo completo está em [examples/network](../../examples/network).
 
+### Tags de sub-rede (EKS e ALB)
+
+O AWS Load Balancer Controller escolhe as sub-redes pelas tags `kubernetes.io/role/elb` (públicas) e
+`kubernetes.io/role/internal-elb` (privadas). Passe-as por `public_subnet_tags` e `private_subnet_tags`:
+
+```hcl
+module "network" {
+  source = "git::https://github.com/heldemfilipe/terraform-aws-foundation.git//modules/network?ref=v1.2.0"
+
+  nome = "lab"
+  azs  = ["us-east-1a", "us-east-1b"]
+
+  public_subnet_tags  = { "kubernetes.io/role/elb" = "1" }
+  private_subnet_tags = { "kubernetes.io/role/internal-elb" = "1" }
+}
+```
+
+As variáveis são opcionais e vazias por padrão: quem não as usa tem o mesmo `plan` da `v1.1.0`.
+
 ## O que o módulo cria
 
 | Recurso | Quantidade | Observação |
@@ -53,6 +72,8 @@ Um único NAT atende todas as zonas, o que é mais barato e menos resiliente do 
 - **Sub-redes públicas não atribuem IP público automaticamente.** IPv4 público é cobrado, e quem
   precisa dele (um balanceador, por exemplo) o recebe de outro recurso.
 - **Security group padrão esvaziado.** Nada usa o grupo padrão por engano com regras abertas.
+- **Tags de sub-rede por variável, separadas para cada lado.** O módulo não conhece o EKS: quem o consome
+  decide quais tags colocar. `Name` e `Tier` vêm por último no `merge` e nunca são sobrescritos.
 - **Sem flow logs.** Ficam fora do escopo do módulo; o achado do scanner de segurança é registrado
   como exceção justificada na Etapa 3.
 
@@ -109,6 +130,8 @@ No modules.
 | <a name="input_cidr_block"></a> [cidr\_block](#input\_cidr\_block) | Bloco CIDR da VPC. Precisa ser /20 ou maior, para caber as sub-redes /24. | `string` | `"10.0.0.0/16"` | no |
 | <a name="input_enable_nat_gateway"></a> [enable\_nat\_gateway](#input\_enable\_nat\_gateway) | Liga o NAT gateway (cobrado por hora). Desligado por padrão. | `bool` | `false` | no |
 | <a name="input_nome"></a> [nome](#input\_nome) | Prefixo usado no nome dos recursos. | `string` | n/a | yes |
+| <a name="input_private_subnet_tags"></a> [private\_subnet\_tags](#input\_private\_subnet\_tags) | Tags extras só das sub-redes privadas (por exemplo, kubernetes.io/role/internal-elb para o EKS). Name e Tier não podem ser sobrescritos. | `map(string)` | `{}` | no |
+| <a name="input_public_subnet_tags"></a> [public\_subnet\_tags](#input\_public\_subnet\_tags) | Tags extras só das sub-redes públicas (por exemplo, kubernetes.io/role/elb para o EKS). Name e Tier não podem ser sobrescritos. | `map(string)` | `{}` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | Tags aplicadas aos recursos. | `map(string)` | `{}` | no |
 
 ## Outputs

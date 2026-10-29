@@ -73,3 +73,48 @@ run "sem_zonas_e_rejeitado" {
 
   expect_failures = [var.azs]
 }
+
+run "sem_tags_extras_so_name_e_tier" {
+  command = plan
+
+  assert {
+    condition     = !contains(keys(aws_subnet.public["us-east-1a"].tags), "kubernetes.io/role/elb") && !contains(keys(aws_subnet.private["us-east-1a"].tags), "kubernetes.io/role/internal-elb")
+    error_message = "Sem as variáveis de tags de sub-rede, nenhuma tag de papel deve existir."
+  }
+}
+
+run "tags_de_subrede_vao_so_para_o_lado_certo" {
+  command = plan
+
+  variables {
+    public_subnet_tags  = { "kubernetes.io/role/elb" = "1" }
+    private_subnet_tags = { "kubernetes.io/role/internal-elb" = "1" }
+  }
+
+  assert {
+    condition = alltrue([
+      for s in aws_subnet.public : s.tags["kubernetes.io/role/elb"] == "1" && !contains(keys(s.tags), "kubernetes.io/role/internal-elb")
+    ])
+    error_message = "As sub-redes públicas devem ter só a tag kubernetes.io/role/elb."
+  }
+
+  assert {
+    condition = alltrue([
+      for s in aws_subnet.private : s.tags["kubernetes.io/role/internal-elb"] == "1" && !contains(keys(s.tags), "kubernetes.io/role/elb")
+    ])
+    error_message = "As sub-redes privadas devem ter só a tag kubernetes.io/role/internal-elb."
+  }
+}
+
+run "tags_de_subrede_nao_sobrescrevem_name_nem_tier" {
+  command = plan
+
+  variables {
+    public_subnet_tags = { Name = "outro", Tier = "outro" }
+  }
+
+  assert {
+    condition     = aws_subnet.public["us-east-1a"].tags["Name"] == "teste-public-us-east-1a" && aws_subnet.public["us-east-1a"].tags["Tier"] == "public"
+    error_message = "Name e Tier do módulo devem prevalecer sobre as tags extras."
+  }
+}
