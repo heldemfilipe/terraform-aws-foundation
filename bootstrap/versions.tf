@@ -12,7 +12,7 @@ terraform {
   # Neste modo estudo fica comentado.
   # backend "s3" {
   #   bucket       = "NOME-DO-BUCKET-DE-STATE"
-  #   key          = "foundation/terraform.tfstate"
+  #   key          = "bootstrap/terraform.tfstate"
   #   region       = "us-east-1"
   #   encrypt      = true
   #   use_lockfile = true
