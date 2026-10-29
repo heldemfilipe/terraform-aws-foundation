@@ -186,7 +186,7 @@ Infracost (Etapa 5, opcional)._ Como rodar sem AWS em [docs/00-instalacao.md](do
 - [x] Etapa 0: repositório e estrutura
 - [x] Etapa 1: state remoto e identidade (só código: validado e testado, não aplicado)
 - [x] Etapa 2: módulos reutilizáveis (tag `v1.0.0`, testados com `mock_provider`)
-- [ ] Etapa 3: qualidade local
+- [x] Etapa 3: qualidade local (pre-commit, tflint, gitleaks e Trivy, em [docs/02-qualidade-local.md](docs/02-qualidade-local.md))
 - [ ] Etapa 4: pipeline de plan e apply
 - [ ] Etapa 5: policy as code e custo
 - [ ] Etapa 6: drift e recuperação
