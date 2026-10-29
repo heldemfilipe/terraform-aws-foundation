@@ -40,3 +40,15 @@ variable "tags" {
   type        = map(string)
   default     = {}
 }
+
+variable "public_subnet_tags" {
+  description = "Tags extras só das sub-redes públicas (por exemplo, kubernetes.io/role/elb para o EKS). Name e Tier não podem ser sobrescritos."
+  type        = map(string)
+  default     = {}
+}
+
+variable "private_subnet_tags" {
+  description = "Tags extras só das sub-redes privadas (por exemplo, kubernetes.io/role/internal-elb para o EKS). Name e Tier não podem ser sobrescritos."
+  type        = map(string)
+  default     = {}
+}

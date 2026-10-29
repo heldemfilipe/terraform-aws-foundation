@@ -36,7 +36,7 @@ resource "aws_subnet" "public" {
   cidr_block              = each.value
   map_public_ip_on_launch = false
 
-  tags = merge(var.tags, { Name = "${var.nome}-public-${each.key}", Tier = "public" })
+  tags = merge(var.tags, var.public_subnet_tags, { Name = "${var.nome}-public-${each.key}", Tier = "public" })
 }
 
 resource "aws_route_table" "public" {
@@ -66,7 +66,7 @@ resource "aws_subnet" "private" {
   availability_zone = each.key
   cidr_block        = each.value
 
-  tags = merge(var.tags, { Name = "${var.nome}-private-${each.key}", Tier = "private" })
+  tags = merge(var.tags, var.private_subnet_tags, { Name = "${var.nome}-private-${each.key}", Tier = "private" })
 }
 
 resource "aws_route_table" "private" {
