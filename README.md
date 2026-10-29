@@ -36,6 +36,10 @@ _A preencher a cada módulo (Etapa 2), com o trecho gerado pelo terraform-docs._
 | Identidade do pipeline | GitHub Actions com OIDC | Sem chave de acesso de longa duração |
 | Segurança | _Trivy ou Checkov_ | _escrever o motivo_ |
 | Policy as code | OPA com conftest | Bloqueia o PR com mensagem legível |
+| Role de plan | `ReadOnlyAccess` mais acesso ao state e só escrita do `.tflock` | Simplificação de estudo: lê mais do que precisa; um projeto real restringiria |
+| Role de apply | Permissões estreitas, só buckets `foundation-lab-*` e o state; nunca `AdministratorAccess` | Limita o dano se o pipeline for comprometido |
+| Aprovação do apply | Environment `production` com revisor obrigatório | O `sub` da role de apply exige esse environment; ninguém aplica de outra branch ou fork |
+| Teste da trust policy | `terraform test` com `mock_provider` sobre o output `github_subs` | Sem AWS não dá para ver a AWS negar; o teste prova que só os `sub` certos são gerados e que valores com curinga são recusados |
 
 ## Custo
 
@@ -54,8 +58,8 @@ Infracost (Etapa 5, opcional)._ Como rodar sem AWS em [docs/00-instalacao.md](do
 
 ## Etapas
 
-- [ ] Etapa 0: repositório e estrutura
-- [ ] Etapa 1: state remoto e identidade
+- [x] Etapa 0: repositório e estrutura
+- [x] Etapa 1: state remoto e identidade (só código: validado e testado, não aplicado)
 - [ ] Etapa 2: módulos reutilizáveis
 - [ ] Etapa 3: qualidade local
 - [ ] Etapa 4: pipeline de plan e apply
