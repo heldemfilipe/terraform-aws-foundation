@@ -8,7 +8,22 @@ Módulos Terraform para AWS, com pipeline plan/apply, policy as code e detecçã
 
 ## Problema
 
-_A preencher: por que uma fundação de IaC com módulos pequenos, testados e versionados._
+Infraestrutura criada à mão, ou com Terraform copiado de projeto em projeto, acumula os mesmos defeitos:
+buckets sem criptografia, redes diferentes a cada vez, `apply` sem revisão, chaves de acesso de longa duração
+e mudanças feitas pelo console que ninguém percebe.
+
+Este repositório mostra uma fundação que ataca cada um deles:
+
+| Defeito | Resposta |
+|---|---|
+| Código copiado e divergente | Módulos pequenos, testados e versionados por tag |
+| Chave de acesso de longa duração | GitHub Actions com OIDC e uma role por papel (plan, apply, drift) |
+| `apply` sem revisão | Plan comentado no PR e apply só depois da aprovação no environment `production` |
+| Configuração insegura chegando à `main` | Trivy, tflint e gitleaks no commit; políticas em Rego que bloqueiam o PR |
+| Mudança por fora do Terraform | Job diário de drift que abre uma issue |
+
+Operação do dia a dia: [runbook](docs/05-runbook.md) (state travado e drift) e
+[experimentos](docs/06-experimentos.md) (o que foi reproduzido de verdade e o que não).
 
 ## Arquitetura
 
@@ -152,7 +167,8 @@ module "bucket" {
 }
 ```
 
-A tag `v1.0.0` é criada no fim da Etapa 2.
+A tag `v1.0.0` foi criada no fim da Etapa 2 e não muda. O fechamento do projeto é a `v1.1.0`, que
+inclui as exceções do Trivy nos módulos; o comportamento dos módulos é o mesmo.
 
 ## Decisões
 
@@ -167,6 +183,7 @@ A tag `v1.0.0` é criada no fim da Etapa 2.
 | Role de plan | `ReadOnlyAccess` mais acesso ao state e só escrita do `.tflock` | Simplificação de estudo: lê mais do que precisa; um projeto real restringiria |
 | Role de apply | Permissões estreitas, só buckets `foundation-lab-*` e o state; nunca `AdministratorAccess` | Limita o dano se o pipeline for comprometido |
 | Raiz do pipeline | `envs/dev`, só com `secure-s3` | A role de apply só tem permissão de S3 em `foundation-lab-*`; incluir `network` exigiria ampliá-la |
+| Role de drift | `ReadOnlyAccess` mais acesso ao state, no `sub` `ref:refs/heads/main` | O job agendado não é PR nem usa environment, então precisa de uma role própria; só lê, e corrigir é sempre pelo pipeline de apply |
 | Aprovação do apply | Environment `production` com revisor obrigatório | O `sub` da role de apply exige esse environment; ninguém aplica de outra branch ou fork |
 | Teste da trust policy | `terraform test` com `mock_provider` sobre o output `github_subs` | Sem AWS não dá para ver a AWS negar; o teste prova que só os `sub` certos são gerados e que valores com curinga são recusados |
 
@@ -178,13 +195,16 @@ API própria. Como rodar sem AWS em [docs/00-instalacao.md](docs/00-instalacao.m
 
 ## Experimentos
 
+Sem conta AWS, o que dava para reproduzir localmente foi executado com provedores locais. Detalhes e saídas em
+[docs/06-experimentos.md](docs/06-experimentos.md).
+
 | Experimento | Status | Resultado observado |
 |---|---|---|
-| Drift | não executado | |
-| Lock preso | não executado | |
-| Refatoração sem recriar (`moved`) | não executado | |
-| Recurso criado fora (`import`) | não executado | |
-| Fork malicioso | não executado | |
+| Drift | parcial | `plan -detailed-exitcode` saiu 0 (limpo), 2 (arquivo alterado por fora) e 1 (erro); o passo do `drift.yml` foi testado nos 5 caminhos com `gh` e `terraform` simulados. Alteração real pelo console da AWS: não executada |
+| Lock preso | não executado | A tentativa local não reproduz (o Windows libera o lock quando o processo morre); só vale no S3. Procedimento no [runbook](docs/05-runbook.md) |
+| Refatoração sem recriar (`moved`) | executado (local) | Só renomear: `1 to add, 1 to destroy`. Com `moved`: `0 to add, 0 to change, 0 to destroy` |
+| Recurso criado fora (`import`) | executado (local) | Configuração igual ao real: `1 to import, 0 to add, 0 to destroy`. Configuração diferente: o Terraform importou e planejou **recriar** |
+| Fork malicioso | parcial | O teste da trust policy confirma que só os `sub` previstos são aceitos. PR de fork real: não executado |
 
 ## Etapas
 
@@ -194,7 +214,7 @@ API própria. Como rodar sem AWS em [docs/00-instalacao.md](docs/00-instalacao.m
 - [x] Etapa 3: qualidade local (pre-commit, tflint, gitleaks e Trivy, em [docs/02-qualidade-local.md](docs/02-qualidade-local.md))
 - [x] Etapa 4: pipeline de plan e apply (só código: validado com `actionlint`, não executado; veja [docs/03-pipeline.md](docs/03-pipeline.md))
 - [x] Etapa 5: policy as code e custo (políticas testadas localmente com `opa` e `conftest`; workflows não executados; veja [docs/04-policy-as-code.md](docs/04-policy-as-code.md))
-- [ ] Etapa 6: drift e recuperação
+- [x] Etapa 6: drift e recuperação (`drift.yml`, [runbook](docs/05-runbook.md) e [experimentos](docs/06-experimentos.md); workflow não executado)
 
 ## Licença
 
