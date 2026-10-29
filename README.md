@@ -126,6 +126,7 @@ Estrutura de pastas:
 ```
 bootstrap/    bucket de state, provedor OIDC e roles (state local, uma única vez)
 modules/      network, secure-s3 e ecs-service
+envs/dev/     raiz que o pipeline executa (usa os módulos, state remoto)
 examples/     um exemplo de uso por módulo
 policy/       políticas em Rego (OPA/conftest)
 .github/      workflows de plan, apply e drift
@@ -159,10 +160,11 @@ A tag `v1.0.0` é criada no fim da Etapa 2.
 | Terraform ou OpenTofu | _a decidir_ | _escrever o motivo_ |
 | State | S3 com `use_lockfile = true` | Locking nativo, sem DynamoDB |
 | Identidade do pipeline | GitHub Actions com OIDC | Sem chave de acesso de longa duração |
-| Segurança | _Trivy ou Checkov_ | _escrever o motivo_ |
+| Segurança | Trivy | Um binário só; lê o Terraform sem `init` nem `plan`; as exceções ficam no código com `#trivy:ignore` e justificativa |
 | Policy as code | OPA com conftest | Bloqueia o PR com mensagem legível |
 | Role de plan | `ReadOnlyAccess` mais acesso ao state e só escrita do `.tflock` | Simplificação de estudo: lê mais do que precisa; um projeto real restringiria |
 | Role de apply | Permissões estreitas, só buckets `foundation-lab-*` e o state; nunca `AdministratorAccess` | Limita o dano se o pipeline for comprometido |
+| Raiz do pipeline | `envs/dev`, só com `secure-s3` | A role de apply só tem permissão de S3 em `foundation-lab-*`; incluir `network` exigiria ampliá-la |
 | Aprovação do apply | Environment `production` com revisor obrigatório | O `sub` da role de apply exige esse environment; ninguém aplica de outra branch ou fork |
 | Teste da trust policy | `terraform test` com `mock_provider` sobre o output `github_subs` | Sem AWS não dá para ver a AWS negar; o teste prova que só os `sub` certos são gerados e que valores com curinga são recusados |
 
@@ -187,7 +189,7 @@ Infracost (Etapa 5, opcional)._ Como rodar sem AWS em [docs/00-instalacao.md](do
 - [x] Etapa 1: state remoto e identidade (só código: validado e testado, não aplicado)
 - [x] Etapa 2: módulos reutilizáveis (tag `v1.0.0`, testados com `mock_provider`)
 - [x] Etapa 3: qualidade local (pre-commit, tflint, gitleaks e Trivy, em [docs/02-qualidade-local.md](docs/02-qualidade-local.md))
-- [ ] Etapa 4: pipeline de plan e apply
+- [x] Etapa 4: pipeline de plan e apply (só código: validado com `actionlint`, não executado; veja [docs/03-pipeline.md](docs/03-pipeline.md))
 - [ ] Etapa 5: policy as code e custo
 - [ ] Etapa 6: drift e recuperação
 
