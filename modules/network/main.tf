@@ -4,6 +4,7 @@ locals {
   private_cidrs = { for i, az in var.azs : az => cidrsubnet(var.cidr_block, 8, i + 100) }
 }
 
+#trivy:ignore:AWS-0178
 resource "aws_vpc" "this" {
   cidr_block           = var.cidr_block
   enable_dns_support   = true

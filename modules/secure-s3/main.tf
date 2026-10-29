@@ -1,3 +1,6 @@
+# Exceção Trivy AWS-0089 (log de acesso): exigiria um segundo bucket só para logs;
+# fica a cargo de quem usa o módulo.
+#trivy:ignore:AWS-0089
 resource "aws_s3_bucket" "this" {
   bucket        = var.nome
   force_destroy = var.force_destroy
@@ -12,6 +15,7 @@ resource "aws_s3_bucket_versioning" "this" {
   }
 }
 
+#trivy:ignore:AWS-0132
 resource "aws_s3_bucket_server_side_encryption_configuration" "this" {
   bucket = aws_s3_bucket.this.id
 

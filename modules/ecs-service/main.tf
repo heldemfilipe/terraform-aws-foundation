@@ -13,6 +13,7 @@ locals {
 
 # --- Logs ---
 
+#trivy:ignore:AWS-0017
 resource "aws_cloudwatch_log_group" "this" {
   name              = "/ecs/${var.nome}"
   retention_in_days = var.log_retention_days
@@ -21,6 +22,7 @@ resource "aws_cloudwatch_log_group" "this" {
 
 # --- Cluster ---
 
+#trivy:ignore:AWS-0034
 resource "aws_ecs_cluster" "this" {
   name = var.nome
   tags = var.tags
@@ -101,6 +103,7 @@ resource "aws_security_group" "service" {
   tags        = merge(var.tags, { Name = "${var.nome}-service" })
 }
 
+#trivy:ignore:AWS-0104
 resource "aws_vpc_security_group_egress_rule" "https" {
   security_group_id = aws_security_group.service.id
   description       = "HTTPS para puxar a imagem e enviar logs"

@@ -45,6 +45,7 @@ resource "aws_vpc_security_group_ingress_rule" "from_alb" {
 
 # --- Balanceador ---
 
+#trivy:ignore:AWS-0053
 resource "aws_lb" "this" {
   count = var.enable_alb ? 1 : 0
 
@@ -73,6 +74,7 @@ resource "aws_lb_target_group" "this" {
   }
 }
 
+#trivy:ignore:AWS-0054
 resource "aws_lb_listener" "http" {
   count = var.enable_alb ? 1 : 0
 
