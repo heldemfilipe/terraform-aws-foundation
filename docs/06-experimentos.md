@@ -35,7 +35,7 @@ Os três códigos são os que o roteiro e o [runbook](05-runbook.md) assumem.
 | Saída 2, issue aberta | `gh issue comment` (não duplica a issue) |
 | Saída 1 | O passo falha com a mesma saída |
 
-**Não executado:** a detecção com recursos da AWS (a role `foundation-drift`, o OIDC no job agendado e a criação
+**Não executado:** a detecção com recursos da AWS (a role `foundation-drift`, o OIDC no job de drift e a criação
 da issue no GitHub).
 
 ## Lock preso

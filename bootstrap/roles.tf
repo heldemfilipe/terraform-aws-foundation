@@ -5,7 +5,7 @@ locals {
   github_subs = {
     plan  = "repo:${var.github_repo}:pull_request"
     apply = "repo:${var.github_repo}:environment:${var.github_environment}"
-    # Job agendado (drift.yml): não é PR nem usa environment.
+    # Job de drift (drift.yml), disparado na main: não é PR nem usa environment.
     drift = "repo:${var.github_repo}:ref:refs/heads/main"
   }
 

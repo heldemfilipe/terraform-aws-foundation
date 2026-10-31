@@ -20,7 +20,7 @@ flowchart LR
 |---|---|---|---|
 | [plan.yml](../.github/workflows/plan.yml) | `pull_request` | `foundation-plan` (`...:pull_request`) | `init -lockfile=readonly`, `fmt -check`, `validate`, `plan`, comenta no PR |
 | [apply.yml](../.github/workflows/apply.yml) | push na `main` (só `envs/` e `modules/`) | `foundation-apply` (`...:environment:production`) | `plan -out`, guarda o texto do plan, `apply plan.tfplan` |
-| [drift.yml](../.github/workflows/drift.yml) | todo dia às 06:00 (Brasília) e manual | `foundation-drift` (`...:ref:refs/heads/main`) | `plan -detailed-exitcode`; abre ou atualiza uma issue se houver drift. Detalhes no [runbook](05-runbook.md) |
+| [drift.yml](../.github/workflows/drift.yml) | manual (`workflow_dispatch`), sem agendamento | `foundation-drift` (`...:ref:refs/heads/main`) | `plan -detailed-exitcode`; abre ou atualiza uma issue se houver drift. Detalhes no [runbook](05-runbook.md) |
 
 O pipeline roda em [envs/dev](../envs/dev). O [bootstrap](../bootstrap) **não** passa pelo pipeline: ele cria
 as roles que o pipeline usa, então é aplicado uma vez, à mão, com state local.

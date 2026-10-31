@@ -1,10 +1,8 @@
 name: drift
 
-# Todo dia compara a AWS com o state e o código. Mudança feita por fora (console, CLI)
+# Sob demanda (gh workflow run drift), sem agendamento: compara a AWS com o state e o código. Mudança feita por fora (console, CLI)
 # aparece como "plan não vazio" e vira uma issue.
 on:
-  schedule:
-    - cron: "0 9 * * *" # 06:00 em Brasília
   workflow_dispatch:
 
 # Não roda junto com um apply: o lock do state já protege, e isto evita fila à toa.
@@ -31,7 +29,7 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      # Role própria, só de leitura: o sub de um job agendado é ref:refs/heads/main,
+      # Role própria, só de leitura: o sub de um job disparado na main (sem PR nem environment) é ref:refs/heads/main,
       # que as roles de plan (pull_request) e de apply (environment) não aceitam.
       - uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
         with:

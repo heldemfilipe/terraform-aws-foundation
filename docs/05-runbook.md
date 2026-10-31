@@ -58,7 +58,7 @@ do objeto `foundation/terraform.tfstate`, restaure a anterior e rode `terraform 
 **Sintoma:** o workflow [drift.yml](../.github/workflows/drift.yml) abriu (ou comentou numa) issue chamada
 **Drift detectado**, com o plan completo. Isso significa que a AWS, o state e o código não batem.
 
-O job roda todo dia às 06:00 (Brasília) com `terraform plan -detailed-exitcode`:
+O job roda sob demanda (`gh workflow run drift`), sem agendamento, com `terraform plan -detailed-exitcode`:
 
 | Saída | Significado | O que o job faz |
 |---|---|---|

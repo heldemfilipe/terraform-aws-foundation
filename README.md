@@ -20,7 +20,7 @@ Este repositório mostra uma fundação que ataca cada um deles:
 | Chave de acesso de longa duração | GitHub Actions com OIDC e uma role por papel (plan, apply, drift) |
 | `apply` sem revisão | Plan comentado no PR e apply só depois da aprovação no environment `production` |
 | Configuração insegura chegando à `main` | Trivy, tflint e gitleaks no commit; políticas em Rego que bloqueiam o PR |
-| Mudança por fora do Terraform | Job diário de drift que abre uma issue |
+| Mudança por fora do Terraform | Job de drift, disparado sob demanda, que abre uma issue |
 
 Operação do dia a dia: [runbook](docs/05-runbook.md) (state travado e drift) e
 [experimentos](docs/06-experimentos.md) (o que foi reproduzido de verdade e o que não).
@@ -183,7 +183,7 @@ inclui as exceções do Trivy nos módulos; o comportamento dos módulos é o me
 | Role de plan | `ReadOnlyAccess` mais acesso ao state e só escrita do `.tflock` | Simplificação de estudo: lê mais do que precisa; um projeto real restringiria |
 | Role de apply | Permissões estreitas, só buckets `foundation-lab-*` e o state; nunca `AdministratorAccess` | Limita o dano se o pipeline for comprometido |
 | Raiz do pipeline | `envs/dev`, só com `secure-s3` | A role de apply só tem permissão de S3 em `foundation-lab-*`; incluir `network` exigiria ampliá-la |
-| Role de drift | `ReadOnlyAccess` mais acesso ao state, no `sub` `ref:refs/heads/main` | O job agendado não é PR nem usa environment, então precisa de uma role própria; só lê, e corrigir é sempre pelo pipeline de apply |
+| Role de drift | `ReadOnlyAccess` mais acesso ao state, no `sub` `ref:refs/heads/main` | O job de drift não é PR nem usa environment, então precisa de uma role própria; só lê, e corrigir é sempre pelo pipeline de apply |
 | Aprovação do apply | Environment `production` com revisor obrigatório | O `sub` da role de apply exige esse environment; ninguém aplica de outra branch ou fork |
 | Teste da trust policy | `terraform test` com `mock_provider` sobre o output `github_subs` | Sem AWS não dá para ver a AWS negar; o teste prova que só os `sub` certos são gerados e que valores com curinga são recusados |
 
