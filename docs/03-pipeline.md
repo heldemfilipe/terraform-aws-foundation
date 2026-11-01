@@ -29,7 +29,7 @@ as roles que o pipeline usa, então é aplicado uma vez, à mão, com state loca
 
 | Peça | Escolha | Motivo |
 |---|---|---|
-| Versão das actions | Fixadas por SHA do commit, com a versão em comentário | Uma tag pode ser movida; um SHA não. O Dependabot propõe as atualizações |
+| Versão das actions | Fixadas por SHA do commit, com a versão em comentário | Uma tag pode ser movida; um SHA não. Sem Dependabot (nada agendado no GitHub): a atualização é manual |
 | Terraform no CI | `1.17.1` fixo, sem wrapper | Reprodutível; sem o wrapper o `terraform show > arquivo` não recebe saída extra |
 | `-lockfile=readonly` | Ligado | O CI usa exatamente os providers do lock; não resolve versão nova sozinho |
 | `concurrency` no apply | Grupo único, sem cancelar | Dois applies no mesmo state corromperiam o state; o segundo espera |
